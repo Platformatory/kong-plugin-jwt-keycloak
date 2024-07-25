@@ -82,6 +82,7 @@ local function openidc_pem_from_rsa_n_and_e(n, e)
 end
 
 local function convert_kc_key(key)
+    kong.log.err(key.n)
     return openidc_pem_from_rsa_n_and_e(key.n, key.e)
 end
 

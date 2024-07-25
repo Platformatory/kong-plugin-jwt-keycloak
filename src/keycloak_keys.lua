@@ -3,6 +3,7 @@ local http = require "socket.http"
 local https = require "ssl.https"
 local cjson_safe = require "cjson.safe"
 local convert = require "kong.plugins.jwt-keycloak.key_conversion"
+local ltn12    = require 'ltn12'
 
 local function get_request(url, scheme, port)
     local req
@@ -12,17 +13,19 @@ local function get_request(url, scheme, port)
         req = http.request
     end
 
+    kong.log.err(url)
+    kong.log.err(scheme)
+    kong.log.err(port)
     local res
     local status
     local err
-
     local chunks = {}
     res, status = req{
         url = url,
         port = port,
         sink = ltn12.sink.table(chunks)
     }
-    
+    kong.log.err(status)
     if status ~= 200 then
         return nil, 'Failed calling url ' .. url .. ' response status ' .. status
     end
@@ -31,7 +34,7 @@ local function get_request(url, scheme, port)
     if not res then
         return nil, 'Failed to parse json response'
     end
-    
+
     return res, nil
 end
 
@@ -44,10 +47,11 @@ local function get_issuer_keys(well_known_endpoint)
     local req = url.parse(well_known_endpoint)
 
     local res, err = get_request(well_known_endpoint, req.scheme, req.port)
+    kong.log.err(err)
     if err then
         return nil, err
     end
-
+    kong.log.err(res['jwks_uri'])
     local res, err = get_request(res['jwks_uri'], req.scheme,  req.port)
     if err then
         return nil, err
@@ -56,7 +60,7 @@ local function get_issuer_keys(well_known_endpoint)
     local keys = {}
     for i, key in ipairs(res['keys']) do
         keys[i] = string.gsub(
-            convert.convert_kc_key(key), 
+            convert.convert_kc_key(key),
             "[\r\n]+", ""
         )
     end

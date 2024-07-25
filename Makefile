@@ -4,7 +4,7 @@ include makefiles/*.mk
 
 REPOSITORY?=telekom-digioss
 IMAGE?=kong-plugin-jwt-keycloak
-KONG_VERSION?=3.4.0
+KONG_VERSION?=3.7.1
 FULL_IMAGE_NAME:=${REPOSITORY}/${IMAGE}:${KONG_VERSION}
 
 PLUGIN_VERSION?=1.3.0-1
@@ -21,7 +21,7 @@ all: default helpers-start keycloak-rm kong-stop keycloak-start build kong-resta
 	
 build:
 	@echo "Building image ..."
-	docker build --pull -q -t ${FULL_IMAGE_NAME} --build-arg KONG_VERSION=${KONG_VERSION} --build-arg PLUGIN_VERSION=${PLUGIN_VERSION} . --progress=plain --no-cache
+	docker build --pull -t ${FULL_IMAGE_NAME} --build-arg KONG_VERSION=${KONG_VERSION} --build-arg PLUGIN_VERSION=${PLUGIN_VERSION} . --progress=plain # --no-cache
 
 run: build
 	docker run -it --rm ${FULL_IMAGE_NAME} kong start --vv
